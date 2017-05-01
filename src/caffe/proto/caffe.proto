@@ -235,12 +235,16 @@ message SolverParameter {
     RMSPROP = 3;
     ADADELTA = 4;
     ADAM = 5;
+    DSR  = 6;
   }
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
 
   // Overlap compute and communication for data parallel training
   optional bool layer_wise_reduce = 41 [default = true];
+
+  optional float dsr_decay = 42 [default = 0.999];
+  optional float dsr_target_ratio = 43 [default = 0.3];
 }
 
 // A message that stores the solver snapshots
