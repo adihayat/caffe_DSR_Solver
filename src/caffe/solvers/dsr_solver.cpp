@@ -1,4 +1,5 @@
 #include "caffe/dsr_solver.hpp"
+#include <cmath>
 
 namespace caffe {
 
@@ -24,63 +25,52 @@ void DSRSolver<Dtype>::ApplyUpdate() {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   Dtype dsr_decay = this->param_.dsr_decay();
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
-      caffe_cpu_axpby(net_params[param_id]->count(), 1.0,
+      caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1.0),
                 net_params[param_id]->cpu_diff(), dsr_decay,
                 line_[param_id]->mutable_cpu_data());
-      caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), 1.0,
+      
+      Dtype current_diff_norm = 0; 
+      caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), Dtype(1.0),
                 net_params[param_id]->cpu_diff(), 
-                1,
                 net_params[param_id]->cpu_diff(), 
-                dsr_decay,
-                &(path_[param_id]));
+                Dtype(0),
+                &(current_diff_norm));
+
+      path_[param_id] = path_[param_id] * dsr_decay + std::sqrt(current_diff_norm);
 
       Dtype line_norm = 0;
-      caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), 1.0,
-                line_[param_id]->cpu_diff(), 
-                1,
-                line_[param_id]->cpu_diff(), 
-                0,
+      caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), Dtype(1.0),
+                line_[param_id]->cpu_data(), 
+                line_[param_id]->cpu_data(), 
+                Dtype(0),
                 &(line_norm));
 
-      ratio_[param_id] = line_norm/path_[param_id];
+      line_norm = std::sqrt(line_norm);
+
+
+      ratio_[param_id] = line_norm/(path_[param_id] + this->param_.dsr_eps());
+      if (param_id %11 == 0)
+        LOG(INFO)  << "param_id=" << param_id <<  " line_norm=" << line_norm << " path_=" << path_[param_id] << " ratio=" << ratio_[param_id] << " shape="  << net_params[param_id]->count();
   }
 
   SGDSolver<Dtype>::ApplyUpdate();
 }
 
-
 template <typename Dtype>
-void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
+Dtype DSRSolver<Dtype>::GetParamLr(int param_id)
+{
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
-  Dtype momentum = this->param_.momentum();
-  Dtype local_rate = rate * net_params_lr[param_id] * this->param_().dsr_target_ratio() * ratio_[param_id];
-  // Compute the update to history, then copy it to the parameter diff.
-  switch (Caffe::mode()) {
-  case Caffe::CPU: {
-    caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-              net_params[param_id]->cpu_diff(), momentum,
-              this->history_[param_id]->mutable_cpu_data());
-    caffe_copy(net_params[param_id]->count(),
-        this->history_[param_id]->cpu_data(),
-        net_params[param_id]->mutable_cpu_diff());
-    break;
-  }
-  case Caffe::GPU: {
-#ifndef CPU_ONLY
-    sgd_update_gpu(net_params[param_id]->count(),
-        net_params[param_id]->mutable_gpu_diff(),
-        this->history_[param_id]->mutable_gpu_data(),
-        momentum, local_rate);
-#else
-    NO_GPU;
-#endif
-    break;
-  }
-  default:
-    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-  }
+  float norm_ratio = ratio_[param_id] / this->param_.dsr_target_ratio();
+  norm_ratio = norm_ratio < this->param_.dsr_min_ratio() ? this->param_.dsr_min_ratio() : 
+               norm_ratio > this->param_.dsr_max_ratio() ? this->param_.dsr_max_ratio() : norm_ratio;
+  if (param_id %11 == 0)
+    LOG(INFO)  << "param_id=" << param_id <<  " norm_ratio=" << norm_ratio << " shape=" << net_params[param_id]->count();
+  return net_params_lr[param_id] * norm_ratio;
 }
+
+INSTANTIATE_CLASS(DSRSolver);
+REGISTER_SOLVER_CLASS(DSR);
 
 
 }

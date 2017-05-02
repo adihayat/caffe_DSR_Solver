@@ -18,8 +18,8 @@ protected:
   
   void AllocateLinePath();
   virtual void ApplyUpdate();
-  virtual void ComputeUpdateValue(int param_id,Dtype rate);
-
+  virtual Dtype GetParamLr(int param_id);
+  
   vector<shared_ptr<Blob<Dtype> > > line_;
   vector<Dtype> path_;
   vector<Dtype> ratio_;
