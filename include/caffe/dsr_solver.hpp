@@ -1,6 +1,8 @@
 #ifndef CAFFE_DSR_SOLVERS_HPP_
 #define CAFFE_DSR_SOLVERS_HPP_
 #include "caffe/sgd_solvers.hpp"
+#include <json/writer.h>
+
 
 namespace caffe {
 
@@ -23,6 +25,7 @@ protected:
   vector<shared_ptr<Blob<Dtype> > > line_;
   vector<Dtype> path_;
   vector<Dtype> ratio_;
+  Json::Value record_;
   DISABLE_COPY_AND_ASSIGN(DSRSolver);
 };
 

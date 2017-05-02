@@ -1,5 +1,8 @@
 #include "caffe/dsr_solver.hpp"
 #include <cmath>
+#include <json/writer.h>
+#include <iostream>
+#include <string>
 
 namespace caffe {
 
@@ -24,6 +27,8 @@ template <typename Dtype>
 void DSRSolver<Dtype>::ApplyUpdate() {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   Dtype dsr_decay = this->param_.dsr_decay();
+  Json::Value & record = this->record_;
+
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1.0),
                 net_params[param_id]->cpu_diff(), dsr_decay,
@@ -51,6 +56,18 @@ void DSRSolver<Dtype>::ApplyUpdate() {
       ratio_[param_id] = line_norm/(path_[param_id] + this->param_.dsr_eps());
       if (param_id %11 == 0)
         LOG(INFO)  << "param_id=" << param_id <<  " line_norm=" << line_norm << " path_=" << path_[param_id] << " ratio=" << ratio_[param_id] << " shape="  << net_params[param_id]->count();
+      
+      if (!record.isMember(std::to_string(param_id)))
+          record[param_id] = Json::Value(Json::arrayValue);
+      record[std::to_string(param_id)].append(ratio_[param_id]);
+      
+
+  }
+  
+  if ((this->iter_ % 1000) == 0) {
+      std::ofstream out("ratio.json");
+      out << record;
+      out.close();
   }
 
   SGDSolver<Dtype>::ApplyUpdate();
