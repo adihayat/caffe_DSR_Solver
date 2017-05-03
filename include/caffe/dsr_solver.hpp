@@ -25,6 +25,7 @@ protected:
   vector<shared_ptr<Blob<Dtype> > > line_;
   vector<Dtype> path_;
   vector<Dtype> ratio_;
+  float         mean_ratio_ = 1;
   Json::Value record_;
   DISABLE_COPY_AND_ASSIGN(DSRSolver);
 };
