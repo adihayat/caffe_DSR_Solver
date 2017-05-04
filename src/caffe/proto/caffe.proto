@@ -248,6 +248,7 @@ message SolverParameter {
   optional float dsr_eps          = 44 [default = 1e-12];
   optional float dsr_min_ratio    = 45 [default = 0.1];
   optional float dsr_max_ratio    = 46 [default = 4.0];
+  optional float dsr_power        = 47 [default = 1.0];
 }
 
 // A message that stores the solver snapshots

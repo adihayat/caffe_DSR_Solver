@@ -29,11 +29,10 @@ void DSRSolver<Dtype>::ApplyUpdate() {
   Dtype dsr_decay = this->param_.dsr_decay();
   Json::Value & record = this->record_;
   Dtype sum_ratio = 0;
-  Dtype dsr_decay_comp = 1 - dsr_decay;
   int   param_count = 0;
 
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
-      caffe_cpu_axpby(net_params[param_id]->count(), dsr_decay_comp,
+      caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1),
                 net_params[param_id]->cpu_diff(), dsr_decay,
                 line_[param_id]->mutable_cpu_data());
       
@@ -44,7 +43,7 @@ void DSRSolver<Dtype>::ApplyUpdate() {
                 Dtype(0),
                 &(current_diff_norm));
 
-      path_[param_id] = path_[param_id] * dsr_decay + std::sqrt(current_diff_norm) * (1-dsr_decay_comp);
+      path_[param_id] = path_[param_id] * dsr_decay + std::sqrt(current_diff_norm);
 
       Dtype line_norm = 0;
       caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), Dtype(1.0),
@@ -89,22 +88,23 @@ void DSRSolver<Dtype>::ApplyUpdate() {
 }
 
 template <typename Dtype>
-Dtype DSRSolver<Dtype>::GetParamLr(int param_id)
+Dtype DSRSolver<Dtype>::GetParamMomentum(int param_id)
 {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
+  Dtype momentum = this->param_.momentum();
   Json::Value & record = this->record_;
   if (net_params[param_id]->count() < this->param_.dsr_min_dim()) {
       record[std::to_string(param_id)]["lr_fix"].append(1);
-      return net_params_lr[param_id];
+      return momentum;
   }
 
-  float norm_ratio = ratio_[param_id] / this->mean_ratio_;
+  float norm_ratio = std::pow(ratio_[param_id] / this->mean_ratio_, this->param_.dsr_power());
   norm_ratio = norm_ratio < this->param_.dsr_min_ratio() ? this->param_.dsr_min_ratio() : 
                norm_ratio > this->param_.dsr_max_ratio() ? this->param_.dsr_max_ratio() : norm_ratio;
   record[std::to_string(param_id)]["lr_fix"].append(norm_ratio);
 
-  return net_params_lr[param_id] * norm_ratio;
+  return momentum * norm_ratio;
 }
 
 INSTANTIATE_CLASS(DSRSolver);

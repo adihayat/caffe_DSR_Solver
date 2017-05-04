@@ -204,10 +204,9 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 }
 
 template <typename Dtype>
-Dtype SGDSolver<Dtype>::GetParamLr(int param_id)
+Dtype SGDSolver<Dtype>::GetParamMomentum(int param_id)
 {
-  const vector<float>& net_params_lr = this->net_->params_lr();
-  return net_params_lr[param_id];
+  return this->param_.momentum();
 }
 
 #ifndef CPU_ONLY
@@ -219,8 +218,9 @@ void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  Dtype momentum = this->param_.momentum();
-  Dtype local_rate = rate * GetParamLr(param_id);
+  const vector<float>& net_params_lr = this->net_->params_lr();
+  Dtype momentum = GetParamMomentum(param_id); this->param_.momentum();
+  Dtype local_rate = rate * net_params_lr[param_id];
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {

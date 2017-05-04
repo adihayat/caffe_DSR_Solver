@@ -20,7 +20,7 @@ protected:
   
   void AllocateLinePath();
   virtual void ApplyUpdate();
-  virtual Dtype GetParamLr(int param_id);
+  virtual Dtype GetParamMomentum(int param_id);
   
   vector<shared_ptr<Blob<Dtype> > > line_;
   vector<Dtype> path_;
