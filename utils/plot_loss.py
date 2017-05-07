@@ -64,7 +64,7 @@ def main(arg,initialized_curves=False,fig=None,axarr=None,found_curves=None,bloc
 
 
             if not initialized_curves:
-                fig , axarr = plt.subplots(reduce(lambda x,y : x + y,found_curves[1::]),sharex=True,figsize=(12,8),frameon=False)
+                fig , axarr = plt.subplots(int(reduce(lambda x,y : int(x) + int(y),found_curves[1::])),sharex=True,figsize=(12,8),frameon=False)
                 if len(what_to_plot)==1:
                     axarr = [axarr]
 
