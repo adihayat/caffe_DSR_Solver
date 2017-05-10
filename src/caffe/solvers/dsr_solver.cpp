@@ -16,10 +16,11 @@ void DSRSolver<Dtype>::AllocateLinePath() {
   for (int i = 0; i < net_params.size(); ++i) {
     const vector<int>& shape = net_params[i]->shape();
     line_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+    abs_line_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     path_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     ratio_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
-    abs_history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
-    abs_line_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+    prev_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+    diff_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
   }
 }
@@ -114,40 +115,73 @@ void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   // Compute the update to history, then copy it to the parameter diff.
   //switch (Caffe::mode()) {
   //case Caffe::CPU: {
-  caffe_cpu_axpby(net_params[param_id]->count(), (1-momentum),
+  
+  caffe_copy(net_params[param_id]->count(),
+      this->history_[param_id]->cpu_data(),
+      this->update_[param_id]->mutable_cpu_data());
+
+  // update history
+  caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
             net_params[param_id]->cpu_diff(), momentum,
             this->history_[param_id]->mutable_cpu_data());
 
-  caffe_abs(net_params[param_id]->count() , this->history_[param_id]->cpu_data() , 
-            abs_history_[param_id]->mutable_cpu_data());
-  
+  // compute update: step back then over step
+  caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
+      this->history_[param_id]->cpu_data(), -momentum,
+      this->update_[param_id]->mutable_cpu_data());
+
+  if (this->iter_==0) {
+    caffe_copy(net_params[param_id]->count(),
+        net_params[param_id]->cpu_data(),
+        prev_[param_id]->mutable_cpu_data());
+
+    caffe_copy(net_params[param_id]->count(),
+        this->update_[param_id]->cpu_data(),
+        net_params[param_id]->mutable_cpu_diff());
+
+    return;
+  }
+
+
+  caffe_sub(net_params[param_id]->count(),
+            net_params[param_id]->cpu_data(),
+            prev_[param_id]->cpu_data(),
+            diff_[param_id]->mutable_cpu_data());
+
   caffe_cpu_axpby(net_params[param_id]->count(), (1-dsr_decay),
-            this->history_[param_id]->cpu_data(), dsr_decay,
+            diff_[param_id]->cpu_data(), dsr_decay,
             line_[param_id]->mutable_cpu_data());
-  
+
+  caffe_abs(net_params[param_id]->count() , diff_[param_id]->cpu_data() , 
+            diff_[param_id]->mutable_cpu_data());
+
   caffe_cpu_axpby(net_params[param_id]->count(), (1-dsr_decay),
-            abs_history_[param_id]->cpu_data(), dsr_decay,
+            diff_[param_id]->cpu_data(), dsr_decay,
             path_[param_id]->mutable_cpu_data());
 
   caffe_add_scalar(net_params[param_id]->count(), Dtype(this->param_.dsr_eps()),
                    path_[param_id]->mutable_cpu_data());
-  
+ 
   caffe_abs(net_params[param_id]->count() , line_[param_id]->cpu_data() , abs_line_[param_id]->mutable_cpu_data());
-  
+
   caffe_div(net_params[param_id]->count() , 
             abs_line_[param_id]->cpu_data() , 
             path_[param_id]->cpu_data() ,
             ratio_[param_id]->mutable_cpu_data());
 
   caffe_mul(net_params[param_id]->count(),
-            this->history_[param_id]->cpu_data(),
+            update_[param_id]->cpu_data(),
             ratio_[param_id]->cpu_data(),
             update_[param_id]->mutable_cpu_data());
 
-  caffe_cpu_axpby(net_params[param_id]->count(), local_rate / (this->param_.dsr_target_ratio() * (1 - momentum)),
+
+  caffe_cpu_axpby(net_params[param_id]->count(), local_rate / (this->param_.dsr_target_ratio()),
             update_[param_id]->cpu_data(), Dtype(0),
             net_params[param_id]->mutable_cpu_diff());
-  
+
+  caffe_copy(net_params[param_id]->count(),
+      net_params[param_id]->cpu_data(),
+      prev_[param_id]->mutable_cpu_data());
 
     //break;
 #if 0

@@ -45,7 +45,7 @@ X = np.arange(-2, 2, 0.1)
 Y = np.arange(-3, 2, 0.1)
 X, Y = np.meshgrid(X, Y)
 Z = curve(X,Y)
-alg.GlobalNoisePower = 0.1
+alg.GlobalNoisePower = 0.0002
 
 x0 = 1
 y0 = 0
@@ -63,7 +63,7 @@ def init_func():
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,rstride=2, cstride=2,
                            linewidth=0, antialiased=False,alpha=0.75)
     CURVES.append((getLinePoint(x0,y0,z0,'r'),getSGDMomentumPath(x0,y0,iters,0.05,0.9)))
-    CURVES.append((getLinePoint(x0,y0,z0,'g'),getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.5,0.5)))
+    CURVES.append((getLinePoint(x0,y0,z0,'g'),getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.1,0.9)))
     CURVES.append((getLinePoint(x0,y0,z0,'y'),getNesterovPath(x0,y0,iters,0.05,0.9)))
     CURVES.append((getLinePoint(x0,y0,z0,'m'),getADAMPath(x0,y0,iters,0.05,0.9,0.999,10e-8)))
 

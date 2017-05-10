@@ -39,14 +39,14 @@ y0 = 0
 eps = 0.01
 z0 = curve(x0,y0)
 
-noise_list = [0.2,0.15,0.1,0.08,0.05,0.02,0.015,0.01,0.008,0.005,0.003,0.001]
+noise_list = [0.05,0.02,0.015,0.01,0.008,0.005,0.003,0.0025,0.002,0.001]
 names = ['SGD','DSR4','NST','ADAM']
 res_noise = np.zeros((len(noise_list),4))
 path_noise = np.zeros((len(noise_list),4))
 
 
 
-trails = 200
+trails = 300
 iters = 150
 
 for n_idx,noise in enumerate(noise_list):
@@ -64,7 +64,7 @@ for n_idx,noise in enumerate(noise_list):
         if np.isnan(pos).any() or (curve(pos[-1,0],pos[-1,1]) < 0):
             res[i,0] = 1
             path[i,0] = np.sum(np.linalg.norm(pos,axis=1))
-        pos = getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.7,0.5)
+        pos = getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.15,0.9)
         pos[pos < -10] = -10
         pos[np.isnan(pos)] = -10
         pos_diff = np.diff(pos)
@@ -90,7 +90,8 @@ for n_idx,noise in enumerate(noise_list):
     print "result {}".format(np.mean(res,axis=0))
     mean_path = np.zeros(path.shape[1])
     for each in xrange(path.shape[1]):
-        mean_path[each] = np.mean(path[path[:,each] > 0, each])
+        if (path[:,each] > 0).any():
+            mean_path[each] = np.mean(path[path[:,each] > 0, each])
 
     print "path {}".format(mean_path)
 
