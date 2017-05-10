@@ -63,7 +63,7 @@ def init_func():
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,rstride=2, cstride=2,
                            linewidth=0, antialiased=False,alpha=0.75)
     CURVES.append((getLinePoint(x0,y0,z0,'r'),getSGDMomentumPath(x0,y0,iters,0.05,0.9)))
-    CURVES.append((getLinePoint(x0,y0,z0,'g'),getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.1,0.9)))
+    CURVES.append((getLinePoint(x0,y0,z0,'g'),getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.1,0.75)))
     CURVES.append((getLinePoint(x0,y0,z0,'y'),getNesterovPath(x0,y0,iters,0.05,0.9)))
     CURVES.append((getLinePoint(x0,y0,z0,'m'),getADAMPath(x0,y0,iters,0.05,0.9,0.999,10e-8)))
 

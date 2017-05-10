@@ -175,7 +175,7 @@ void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
             update_[param_id]->mutable_cpu_data());
 
 
-  caffe_cpu_axpby(net_params[param_id]->count(), local_rate / (this->param_.dsr_target_ratio()),
+  caffe_cpu_axpby(net_params[param_id]->count(), Dtype(this->param_.dsr_target_ratio()),
             update_[param_id]->cpu_data(), Dtype(0),
             net_params[param_id]->mutable_cpu_diff());
 

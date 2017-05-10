@@ -10,10 +10,10 @@ def curve_grad(X,Y,noise=0.10):
     return np.array((0.2*X + np.random.normal(0,noise,X.shape),0.01 + 2*Y + np.random.normal(0,noise,Y.shape)))
 '''
 def curve(X,Y):
-    return 0.1*X**2 + 0.2*np.cos(Y) + 0.1*(Y**2)*(Y>0)
+    return 0.1*X**2 + 0.2*np.cos(Y) + 0.1*(Y**2)*(Y>0) + 0.00001*Y
 
 def curve_grad(X,Y):
-    return np.array((0.2*X + np.random.normal(0,GlobalNoisePower,X.shape),-0.2*np.sin(Y) + 0.2*Y*(Y>0) + np.random.normal(0,GlobalNoisePower,Y.shape)))
+    return np.array((0.2*X + np.random.normal(0,GlobalNoisePower,X.shape),0.00001 -0.2*np.sin(Y) + 0.2*Y*(Y>0) + np.random.normal(0,GlobalNoisePower,Y.shape)))
 
 def getSGDPath(x0,y0,iters,lr):
     pos = np.zeros((iters,2))
