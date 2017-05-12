@@ -46,7 +46,7 @@ path_noise = np.zeros((len(noise_list),4))
 
 
 
-trails = 300
+trails = 500
 iters = 150
 
 for n_idx,noise in enumerate(noise_list):
@@ -64,7 +64,7 @@ for n_idx,noise in enumerate(noise_list):
         if np.isnan(pos).any() or (curve(pos[-1,0],pos[-1,1]) < 0):
             res[i,0] = 1
             path[i,0] = np.sum(np.linalg.norm(pos,axis=1))
-        pos = getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.9,0.9)
+        pos = getDSR5MomentumPath(x0,y0,iters,0.05,0.9,0.999,10e-8,0.7)
         pos[pos < -10] = -10
         pos[np.isnan(pos)] = -10
         pos_diff = np.diff(pos)

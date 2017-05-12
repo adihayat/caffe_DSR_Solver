@@ -243,9 +243,11 @@ message SolverParameter {
   // Overlap compute and communication for data parallel training
   optional bool layer_wise_reduce = 41 [default = true];
 
-  optional float dsr_decay        = 42 [default = 0.998];
-  optional float dsr_target_ratio = 43 [default = 0.3];
-  optional float dsr_eps          = 44 [default = 1e-8];
+  optional float dsr_decay          = 42 [default = 0.998];
+  optional float dsr_target_ratio   = 43 [default = 0.3];
+  optional float dsr_eps            = 44 [default = 1e-8];
+  optional int32 dsr_sample_factor  = 45 [default = 100];
+  optional int32 dsr_min_dim        = 46 [default = 1000];
 }
 
 // A message that stores the solver snapshots

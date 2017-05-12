@@ -8,12 +8,7 @@ with open('ratio.json','r') as f:
 size_to_ratio = {}
 size_to_fix = {}
 for each in D:
-    size_to_ratio.setdefault(D[each]['size'],[]).extend(D[each]['ratio'])
     size_to_fix.setdefault(D[each]['size'],[]).extend(D[each]['lr_fix'])
-
-size_to_mean_ratio = {}
-for each in size_to_ratio:
-    size_to_mean_ratio[int(each)] = np.mean(size_to_ratio[each])
 
 size_to_mean_fix = {}
 size_to_std_fix = {}
@@ -41,8 +36,8 @@ for each in D:
         min_std = currrent_min
         min_std_idx = each
 
-plt.scatter(size_to_mean_ratio.keys(),size_to_mean_ratio.values())
-plt.title("ratio vs size")
+plt.scatter(size_to_mean_fix.keys(),size_to_mean_fix.values())
+plt.title("fix vs size")
 
 plt.figure()
 plt.scatter(size_to_mean_fix.keys(),size_to_mean_fix.values())

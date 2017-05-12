@@ -68,7 +68,7 @@ def getDSR2MomentumPath(x0,y0,iters,lr,m,window_factor,target_ratio):
         diff = pos[each,:] - pos[each-1,:]
         line =  line * window_factor  +  momentum * (1 - window_factor)
         path =  path * (window_factor) + np.abs(momentum) * (1-window_factor)
-        ratio = ((np.abs(line) / path))
+        ratio = ((np.abs(line) / path))**0.5
         lr_fix = ratio / target_ratio
 
 
@@ -139,6 +139,32 @@ def getDSR4MomentumPath(x0,y0,iters,lr,m,beta,target_ratio):
         line =  line * beta  +  diff * (1 - beta)
         path =  path * (beta) + np.abs(diff) * (1- beta)
         ratio = ((np.abs(line) / (path + 1e-16)))
+        lr_fix = ratio / target_ratio
+
+    return pos
+
+def getDSR5MomentumPath(x0,y0,iters,lr,beta1,beta2,eps_v,target_ratio):
+    pos = np.zeros((iters,2))
+    pos[0,:] = np.array((x0,y0))
+    momentum = np.zeros(2)
+    lr_fix = 1
+    line = np.zeros(2)
+    path = np.zeros(2)
+    m = np.zeros(2)
+    v = np.zeros(2)
+    for each in xrange(iters):
+        if each == 0 :
+            continue
+        g = curve_grad(pos[each-1,0] , pos[each-1,1] )
+        m = beta1 * m + (1-beta1) * g
+        v = beta2 * v + (1-beta2) * (g**2)
+        m_caret = m /( 1- beta1)
+        v_caret = v / (1- beta2)
+        pos[each,:] = np.array((pos[each-1,0],pos[each-1,1])) - lr * lr_fix * m_caret / ( (v_caret**0.5) + eps_v )
+        diff = pos[each,:] - pos[each-1,:]
+        line =  line * beta1  +  diff * (1 - beta1)
+        path =  path * (beta1) + np.linalg.norm(diff) * (1- beta1)
+        ratio = ((np.abs(line) / (path)))**0.25
         lr_fix = ratio / target_ratio
 
     return pos

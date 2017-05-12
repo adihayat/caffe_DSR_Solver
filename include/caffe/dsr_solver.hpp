@@ -23,7 +23,9 @@ protected:
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual Dtype GetParamMomentum(int param_id);
   
-  vector<shared_ptr<Blob<Dtype> > > line_ ,abs_line_ , path_, ratio_ , prev_ ,diff_ , update_;
+  vector<shared_ptr<Blob<Dtype> > > line_ ,abs_line_ , ratio_ , prev_ ,diff_ , update_;
+  vector<Dtype> path_ , lr_fix_ ;
+  Dtype         mean_ratio_ = 1;
   Json::Value record_;
   DISABLE_COPY_AND_ASSIGN(DSRSolver);
 };
