@@ -201,7 +201,7 @@ void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
   Dtype line_norm = caffe_norm(net_params[param_id]->count(),line_[param_id]->cpu_data());
 
-  lr_fix_[param_id] = line_norm / (diff_norm * this->mean_ratio_);
+  lr_fix_[param_id] = std::pow(line_norm / (diff_norm * this->mean_ratio_) , Dtype(this->param_.dsr_power()))  ;
     
   Json::Value & record = this->record_;
   record[std::to_string(param_id)]["lr_fix"].append(lr_fix_[param_id]);

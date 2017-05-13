@@ -5,14 +5,17 @@ from matplotlib import pyplot as plt
 with open('ratio.json','r') as f:
     D = json.load(f)
 
-size_to_ratio = {}
 size_to_fix = {}
 for each in D:
+    if each == 'mean_ratio':
+        continue
     size_to_fix.setdefault(D[each]['size'],[]).extend(D[each]['lr_fix'])
+
+mean_ratio = D['mean_ratio']
 
 size_to_mean_fix = {}
 size_to_std_fix = {}
-for each in size_to_ratio:
+for each in size_to_fix:
     size_to_mean_fix[int(each)] = np.mean(size_to_fix[each])
     size_to_std_fix[int(each)] = np.std(size_to_fix[each])
 
@@ -24,6 +27,10 @@ min_std = 100000
 max_std_idx = ''
 min_std_idx = ''
 for each in D:
+    if each == 'mean_ratio':
+        continue
+    if not D[each]['lr_fix']:
+        continue
     param_to_fix[each] = D[each]['lr_fix']
     currrent_max = np.max(param_to_fix[each])
     currrent_min = np.min(param_to_fix[each])
@@ -63,5 +70,9 @@ plt.title(" max param {} lr_fix".format(max_std_idx))
 plt.figure()
 plt.plot(D[min_std_idx]['lr_fix'])
 plt.title(" min param {} lr_fix".format(min_std_idx))
+
+plt.figure()
+plt.plot(mean_ratio)
+plt.title(" mean_ratio ")
 
 plt.show()

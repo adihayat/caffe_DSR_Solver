@@ -248,6 +248,8 @@ message SolverParameter {
   optional float dsr_eps            = 44 [default = 1e-8];
   optional int32 dsr_sample_factor  = 45 [default = 100];
   optional int32 dsr_min_dim        = 46 [default = 1000];
+  optional float dsr_power          = 47 [default = 1.0];
+
 }
 
 // A message that stores the solver snapshots
