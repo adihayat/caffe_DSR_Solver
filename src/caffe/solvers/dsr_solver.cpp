@@ -114,7 +114,7 @@ void DSRSolver<Dtype>::ApplyUpdate() {
 
     
     
-    this->mean_ratio_ = (this->mean_ratio_ * dsr_decay + (sum_ratio / param_count) * (1-dsr_decay));
+    this->mean_ratio_ = sum_ratio / param_count;
     record["mean_ratio"].append(this->mean_ratio_);
   }
   
