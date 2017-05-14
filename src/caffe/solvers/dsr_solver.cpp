@@ -99,7 +99,6 @@ void DSRSolver<Dtype>::ApplyUpdate() {
   if ((this->iter_ % this->param_.dsr_sample_factor() == 0) && this->iter_ > 0)
   {
     const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-    Dtype dsr_decay = this->param_.dsr_decay();
     Dtype sum_ratio = 0;
     int   param_count = 0;
 
