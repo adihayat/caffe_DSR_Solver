@@ -121,13 +121,14 @@ def getDSR3MomentumPath(x0,y0,iters,lr,beta1,beta2,beta3 , eps_v):
         #print lr_fix
     return pos
 
-def getDSR4MomentumPath(x0,y0,iters,lr,m,beta,target_ratio):
+def getDSR4MomentumPath(x0,y0,iters,lr,m,beta,target_ratio,mod,power):
     pos = np.zeros((iters,2))
     pos[0,:] = np.array((x0,y0))
     momentum = np.zeros(2)
     lr_fix = 1
     line = np.zeros(2)
     path = np.zeros(2)
+    prev = pos[0,:]
     for each in xrange(iters):
         if each == 0 :
             continue
@@ -135,11 +136,13 @@ def getDSR4MomentumPath(x0,y0,iters,lr,m,beta,target_ratio):
         g = curve_grad(pos_for_grad[0],pos_for_grad[1])
         momentum = m * momentum + g
         pos[each,:] = np.array((pos[each-1,0],pos[each-1,1])) - lr * momentum * lr_fix
-        diff = pos[each,:] - pos[each-1,:]
-        line =  line * beta  +  diff * (1 - beta)
-        path =  path * (beta) + np.abs(diff) * (1- beta)
-        ratio = ((np.abs(line) / (path + 1e-16)))
-        lr_fix = ratio / target_ratio
+        if (each % mod == 0):
+            diff = pos[each,:] - prev
+            line =  line * beta  +  diff * (1 - beta)
+            path =  path * (beta) + np.abs(diff) * (1- beta)
+            ratio = ((np.abs(line) / (path + 1e-16)))
+            lr_fix = (ratio / target_ratio)**power
+            prev = pos[each,:]
 
     return pos
 

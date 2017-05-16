@@ -20,9 +20,9 @@ import matplotlib.animation as animation
 from alg import *
 import alg
 
-def getLinePoint(x0,y0,z0,color):
+def getLinePoint(x0,y0,z0,color,title):
 
-    line,  = ax.plot([x0],[y0],[z0+eps],color=color)
+    line,  = ax.plot([x0],[y0],[z0+eps],color=color,label=title)
     point,  = ax.plot([x0], [y0], [z0+eps], c=color, marker='o')
     return line , point
 
@@ -62,10 +62,11 @@ def init_func():
     ax.clear()
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,rstride=2, cstride=2,
                            linewidth=0, antialiased=False,alpha=0.75)
-    CURVES.append((getLinePoint(x0,y0,z0,'r'),getSGDMomentumPath(x0,y0,iters,0.05,0.9)))
-    CURVES.append((getLinePoint(x0,y0,z0,'g'),getDSR5MomentumPath(x0,y0,iters,0.05,0.9,0.999,10e-8,0.5)))
-    CURVES.append((getLinePoint(x0,y0,z0,'y'),getNesterovPath(x0,y0,iters,0.05,0.9)))
-    CURVES.append((getLinePoint(x0,y0,z0,'m'),getADAMPath(x0,y0,iters,0.05,0.9,0.999,10e-8)))
+    CURVES.append((getLinePoint(x0,y0,z0,'r','SGD'),getSGDMomentumPath(x0,y0,iters,0.05,0.9)))
+    CURVES.append((getLinePoint(x0,y0,z0,'g','DSR'),getDSR4MomentumPath(x0,y0,iters,0.05,0.9,0.9,0.5,10,1.5)))
+    CURVES.append((getLinePoint(x0,y0,z0,'y','NST'),getNesterovPath(x0,y0,iters,0.05,0.9)))
+    CURVES.append((getLinePoint(x0,y0,z0,'m','ADM'),getADAMPath(x0,y0,iters,0.05,0.9,0.999,10e-8)))
+    plt.legend()
 
 # Add a color bar which maps values to colors.
 
