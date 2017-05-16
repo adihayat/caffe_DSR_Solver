@@ -33,66 +33,6 @@ void DSRSolver<Dtype>::AllocateLinePath() {
 
 template <typename Dtype>
 void DSRSolver<Dtype>::ApplyUpdate() {
-#if 0
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  Dtype dsr_decay = this->param_.dsr_decay();
-  Json::Value & record = this->record_;
-  Dtype sum_ratio = 0;
-  int   param_count = 0;
-
-  for (int param_id = 0; param_id < net_params.size(); ++param_id) {
-      caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1),
-                net_params[param_id]->cpu_diff(), dsr_decay,
-                line_[param_id]->mutable_cpu_data());
-      
-      Dtype current_diff_norm = 0; 
-      caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), Dtype(1.0),
-                net_params[param_id]->cpu_diff(), 
-                net_params[param_id]->cpu_diff(), 
-                Dtype(0),
-                &(current_diff_norm));
-
-      path_[param_id] = path_[param_id] * dsr_decay + std::sqrt(current_diff_norm);
-
-      Dtype line_norm = 0;
-      caffe_cpu_gemv(CblasNoTrans,1,net_params[param_id]->count(), Dtype(1.0),
-                line_[param_id]->cpu_data(), 
-                line_[param_id]->cpu_data(), 
-                Dtype(0),
-                &(line_norm));
-
-      line_norm = std::sqrt(line_norm);
-
-
-      ratio_[param_id] = line_norm/(path_[param_id] + this->param_.dsr_eps());
-            
-      if (!record.isMember(std::to_string(param_id))) {
-          record[std::to_string(param_id)]["ratio"] = Json::Value(Json::arrayValue);
-          record[std::to_string(param_id)]["line"] = Json::Value(Json::arrayValue);
-          record[std::to_string(param_id)]["path"] = Json::Value(Json::arrayValue);
-          record[std::to_string(param_id)]["lr_fix"] = Json::Value(Json::arrayValue);
-          record[std::to_string(param_id)]["size"] = net_params[param_id]->count();
-      }
-
-      record[std::to_string(param_id)]["ratio"].append(ratio_[param_id]);
-      record[std::to_string(param_id)]["line"].append(line_norm);
-      record[std::to_string(param_id)]["path"].append(path_[param_id]);
-     
-      if (net_params[param_id]->count() >= this->param_.dsr_min_dim()) { 
-        param_count += 1;
-        sum_ratio += ratio_[param_id];
-      }
-
-  }
-  
-  if ((this->iter_ % 2000) == 0) {
-      std::ofstream out("ratio.json");
-      out << record;
-      out.close();
-  }
-
-#endif 
-
   SGDSolver<Dtype>::ApplyUpdate();
   
   Json::Value & record = this->record_;
@@ -200,7 +140,7 @@ void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
   Dtype line_norm = caffe_norm(net_params[param_id]->count(),line_[param_id]->cpu_data());
 
-  lr_fix_[param_id] = std::pow(line_norm / (diff_norm * this->mean_ratio_) , Dtype(this->param_.dsr_power()))  ;
+  lr_fix_[param_id] = std::min(Dtype(this->param_.dsr_max_lr_fix()), std::pow(line_norm / (diff_norm * this->mean_ratio_) , Dtype(this->param_.dsr_power())));
     
   Json::Value & record = this->record_;
   record[std::to_string(param_id)]["lr_fix"].append(lr_fix_[param_id]);

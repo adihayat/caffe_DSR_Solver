@@ -55,12 +55,12 @@ plt.scatter(size_to_std_fix.keys(),size_to_std_fix.values())
 plt.title("std fix vs size")
 
 plt.figure()
-plt.plot(D['56']['lr_fix'])
-plt.title(" param 56 lr_fix")
+plt.plot(D['16']['lr_fix'])
+plt.title(" param 16 lr_fix")
 
 plt.figure()
-plt.plot(D['140']['lr_fix'])
-plt.title(" param 140 lr_fix")
+plt.plot(D['14']['lr_fix'])
+plt.title(" param 14 lr_fix")
 
 
 plt.figure()
