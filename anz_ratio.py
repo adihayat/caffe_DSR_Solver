@@ -42,7 +42,7 @@ for each in D:
     if currrent_min < min_std:
         min_std = currrent_min
         min_std_idx = each
-
+'''
 plt.scatter(size_to_mean_fix.keys(),size_to_mean_fix.values())
 plt.title("fix vs size")
 
@@ -54,13 +54,6 @@ plt.figure()
 plt.scatter(size_to_std_fix.keys(),size_to_std_fix.values())
 plt.title("std fix vs size")
 
-plt.figure()
-plt.plot(D['16']['lr_fix'])
-plt.title(" param 16 lr_fix")
-
-plt.figure()
-plt.plot(D['14']['lr_fix'])
-plt.title(" param 14 lr_fix")
 
 
 plt.figure()
@@ -75,4 +68,15 @@ plt.figure()
 plt.plot(mean_ratio)
 plt.title(" mean_ratio ")
 
+plt.show()
+'''
+for idx,each in enumerate(D):
+    if each == 'mean_ratio':
+        continue
+    plt.plot(D[each]['lr_fix'],label=each)
+
+plt.legend(loc="lower right")
+plt.figure()
+plt.plot(D['mean_ratio'],label='mean_ratio')
+plt.legend(loc="lower right")
 plt.show()

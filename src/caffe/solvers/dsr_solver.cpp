@@ -16,8 +16,7 @@ void DSRSolver<Dtype>::AllocateLinePath() {
     line_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     abs_line_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     path_.push_back(0);
-    lr_fix_.push_back(1);
-    ratio_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+    ratio_.push_back(1);
     prev_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     diff_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
@@ -34,7 +33,6 @@ void DSRSolver<Dtype>::AllocateLinePath() {
 template <typename Dtype>
 void DSRSolver<Dtype>::ApplyUpdate() {
   SGDSolver<Dtype>::ApplyUpdate();
-  
   Json::Value & record = this->record_;
   if ((this->iter_ % this->param_.dsr_sample_factor() == 0) && this->iter_ > 0)
   {
@@ -46,12 +44,9 @@ void DSRSolver<Dtype>::ApplyUpdate() {
         if (net_params[param_id]->count() < this->param_.dsr_min_dim())
             continue;
 
-        Dtype line_norm = caffe_norm(net_params[param_id]->count(),line_[param_id]->cpu_data());
-        sum_ratio += line_norm / path_[param_id];
+        sum_ratio += ratio_[param_id];
         param_count += 1;
     }
-
-    
     
     this->mean_ratio_ = sum_ratio / param_count;
     record["mean_ratio"].append(this->mean_ratio_);
@@ -92,8 +87,10 @@ void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       this->history_[param_id]->cpu_data(),
       this->update_[param_id]->mutable_cpu_data());
 
+  
+  Dtype lr_fix = std::min(Dtype(this->param_.dsr_max_lr_fix()), std::pow(ratio_[param_id] / this->mean_ratio_ , Dtype(this->param_.dsr_power())));
   // update history
-  caffe_cpu_axpby(net_params[param_id]->count(), local_rate * lr_fix_[param_id],
+  caffe_cpu_axpby(net_params[param_id]->count(), local_rate * lr_fix,
             net_params[param_id]->cpu_diff(), momentum,
             this->history_[param_id]->mutable_cpu_data());
 
@@ -140,10 +137,10 @@ void DSRSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
   Dtype line_norm = caffe_norm(net_params[param_id]->count(),line_[param_id]->cpu_data());
 
-  lr_fix_[param_id] = std::min(Dtype(this->param_.dsr_max_lr_fix()), std::pow(line_norm / (diff_norm * this->mean_ratio_) , Dtype(this->param_.dsr_power())));
+  ratio_[param_id] = line_norm / diff_norm ; 
     
   Json::Value & record = this->record_;
-  record[std::to_string(param_id)]["lr_fix"].append(lr_fix_[param_id]);
+  record[std::to_string(param_id)]["lr_fix"].append(lr_fix);
   record[std::to_string(param_id)]["line_norm"].append(line_norm);
   record[std::to_string(param_id)]["path"].append(path_[param_id]);
 
